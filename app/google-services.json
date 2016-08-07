@@ -1,0 +1,42 @@
+{
+  "project_info": {
+    "project_number": "1026946029901",
+    "firebase_url": "https://medhini-33909.firebaseio.com",
+    "project_id": "medhini-33909",
+    "storage_bucket": "medhini-33909.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1026946029901:android:022ff393bd1ac7b8",
+        "android_client_info": {
+          "package_name": "com.example.nida.medhini"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1026946029901-k57m2gdsam4nfsol9ebupcps79qu0an2.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBuHLYufitTXdvEGYv64J8cE5MvcWru7ts"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
