@@ -3,9 +3,9 @@ package com.example.nida.medhini;
 import android.app.Service;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.location.Criteria;
 import android.location.Location;
-import android.location.LocationListener;
-import android.location.LocationManager;
+import android.nfc.Tag;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.support.v4.app.ActivityCompat;
@@ -17,14 +17,13 @@ import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.maps.SupportMapFragment;
+import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.Objects;
 
 /**
  * Created by nida on 23-07-2016.
@@ -35,8 +34,10 @@ public class MyService extends Service implements GoogleApiClient.ConnectionCall
     static LocationRequest locationRequest;
     static GoogleApiClient googleApiClient;
 
+    boolean isConnected = false;
 
-//    DatabaseReference databaseReference;
+
+    DatabaseReference databaseReference;
 
 
     @Override
@@ -44,6 +45,8 @@ public class MyService extends Service implements GoogleApiClient.ConnectionCall
         return null;
 
     }
+
+
 
     @Override
     public void onStart(Intent intent, int startId) {
@@ -57,11 +60,10 @@ public class MyService extends Service implements GoogleApiClient.ConnectionCall
         Toast.makeText(MyService.this, "Created Service", Toast.LENGTH_SHORT).show();
         Log.d(TAG, "onCreate: ");
 
-//        databaseReference = FirebaseDatabase.getInstance().getReference();
+        databaseReference = FirebaseDatabase.getInstance().getReference();
 
 
-
-//        LocationManager locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
+        //LocationManager locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
 //        if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
 //            // TODO: Consider calling
 //            //    ActivityCompat#requestPermissions
@@ -76,6 +78,8 @@ public class MyService extends Service implements GoogleApiClient.ConnectionCall
 
 
         connectToGoogleApi();
+
+
     }
 
     public void connectToGoogleApi() {
@@ -112,30 +116,43 @@ public class MyService extends Service implements GoogleApiClient.ConnectionCall
         locationRequest.setFastestInterval(1000); // the fastest rate in milliseconds at which your app can handle location updates
         locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
 
+
+        isConnected = true;
+
         if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             // TODO: Consider calling
             //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
+                        // here to request the missing permissions, and then overriding
             //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
             //                                          int[] grantResults)
             // to handle the case where the user grants the permission. See the documentation
             // for ActivityCompat#requestPermissions for more details.
-            return;
         }
-        LocationServices.FusedLocationApi.requestLocationUpdates(
-                googleApiClient, locationRequest, new com.google.android.gms.location.LocationListener() {
-                    @Override
-                    public void onLocationChanged(Location location) {
 
-                        Log.d(TAG, "onLocationChanged() called with: " + "location = [" + location + "]");
+        Log.d(TAG, "going to location callack");
+        
+        if (isConnected) {
 
-                        Log.d("LOCATION",location.getLatitude()+" "+location.getLongitude()+"asdfg");
-                        Toast.makeText(MyService.this, location.getLatitude()+" "+location.getLongitude(), Toast.LENGTH_SHORT).show();
+            Log.d(TAG, "going to location callack 2");
 
-                        addToDb(location.getLatitude(),location.getLongitude());
+            LocationServices.FusedLocationApi.requestLocationUpdates(
+            googleApiClient, locationRequest, new com.google.android.gms.location.LocationListener() {
+                        @Override
+                        public void onLocationChanged(Location location) {
 
-                    }
-                });
+                            Log.d(TAG, "onLocationChanged() called with: " + "location = [" + location + "]");
+
+                            Log.d("LOCATION", location.getLatitude() + " " + location.getLongitude() + "asdfg");
+                            Toast.makeText(MyService.this, location.getLatitude() + " " + location.getLongitude(), Toast.LENGTH_SHORT).show();
+
+                            addToDb(location.getLatitude(), location.getLongitude());
+
+                        }
+                    });
+
+        }
+
+
     }
 
     private void addToDb(double latitude, double longitude) {
@@ -144,18 +161,18 @@ public class MyService extends Service implements GoogleApiClient.ConnectionCall
         Log.d("tag", "addToDb: testing the db");
 
 
-        HashMap<String,Object>   hashmap = new HashMap<>();
-        hashmap.put("lat",latitude);
-        hashmap.put("lon",longitude);
+        HashMap<String, Object> hashmap = new HashMap<>();
+        hashmap.put("lat", latitude);
+        hashmap.put("lon", longitude);
 
-        HashMap<String,Object> hm = new HashMap<>();
+        HashMap<String, Object> hm = new HashMap<>();
 
-        String uid = "uid";
-        hm.put("/"+uid+"/locations/"+getCurrentTimeStamp(),hashmap);
+        String uid = FirebaseAuth.getInstance().getCurrentUser().getUid();
+        hm.put("/" + uid + "/locations/" + getCurrentTimeStamp(), hashmap);
 
-//        databaseReference.updateChildren(hm);
+        databaseReference.updateChildren(hm);
 
-//        databaseReference.child("test").setValue("testing val");
+        databaseReference.child("test").setValue("testing val");
 
 
     }
