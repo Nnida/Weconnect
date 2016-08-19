@@ -27,14 +27,22 @@ import com.google.firebase.database.ValueEventListener;
 
 import org.w3c.dom.Comment;
 
+import java.util.HashMap;
+import java.util.Objects;
+import java.util.Set;
+
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
 
     private GoogleMap mMap;
     private DatabaseReference mDatabase;
     FirebaseDatabase database = FirebaseDatabase.getInstance();
-    DatabaseReference myRef = database.getReference("locations");
+    DatabaseReference myRef = database.getReference();
     private static final String TAG = "service tag";
+    String uuid;
+    String data;
+    String username;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,110 +55,47 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
 
-
-// Read from the database
-        myRef.addValueEventListener(new ValueEventListener() {
+        myRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                // This method is called once with the initial value and again
-                // whenever data at this location is updated.
-                String value = dataSnapshot.getValue(String.class);
-                Log.d(TAG, "Value is: " + value);
+                Log.d(TAG, "onDataChange: "+dataSnapshot);
+                HashMap<String,Object> hm = (HashMap<String, Object>) dataSnapshot.getValue();
+
+                Set<String> set = hm.keySet();
+
+                for(String uid:set){
+                    Log.d(TAG, "onDataChange: "+uid);
+                    HashMap<String,Object> hm1 = (HashMap<String, Object>) dataSnapshot.child(uid).child("locations").getValue();
+                    Log.d(TAG, "onDataChange: "+hm1);
+                    Set<String> set1 = hm1.keySet();
+                    double lon = 0;
+                    double lat = 0;
+                    for(String key:set1){
+                        HashMap<String,Object> locHm = (HashMap<String, Object>) hm1.get(key);
+                        Log.d(TAG, "onDataChange: loc "+locHm);
+
+                        lat = (double) locHm.get("lat");
+                        lon = (double) locHm.get("lon");
+
+                        Log.d(TAG, "onDataChange: lat "+lat+" lon "+lon);
+
+                    }
+
+                    LatLng latLng = new LatLng(lat,lon);
+
+                    mMap.addMarker(new MarkerOptions().position(latLng).title("Marker"));
+
+
+                }
+
             }
 
             @Override
-            public void onCancelled(DatabaseError error) {
-                // Failed to read value
-                Log.w(TAG, "Failed to read value.", error.toException());
+            public void onCancelled(DatabaseError databaseError) {
+                Log.d(TAG, "onCancelled: "+databaseError);
             }
         });
-        ValueEventListener postListener = new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                // Get Post object and use the values to update the UI
-                String location = dataSnapshot.getValue(String.class);
-                // ...
-            }
 
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-                // Getting Post failed, log a message
-                Log.w(TAG, "loadPost:onCancelled", databaseError.toException());
-                // ...
-            }
-        };
-        mPostReference.addValueEventListener(postListener);
-        ChildEventListener childEventListener = new ChildEventListener() {
-            @Override
-            public void onChildAdded(DataSnapshot dataSnapshot, String previousChildName) {
-                Log.d(TAG, "onChildAdded:" + dataSnapshot.getKey());
-
-                // A new comment has been added, add it to the displayed list
-                Comment comment = dataSnapshot.getValue(Comment.class);
-
-                // ...
-            }
-
-            @Override
-            public void onChildChanged(DataSnapshot dataSnapshot, String previousChildName) {
-                Log.d(TAG, "onChildChanged:" + dataSnapshot.getKey());
-
-                // A comment has changed, use the key to determine if we are displaying this
-                // comment and if so displayed the changed comment.
-                Comment newComment = dataSnapshot.getValue(Comment.class);
-                String commentKey = dataSnapshot.getKey();
-
-                // ...
-            }
-
-            @Override
-            public void onChildRemoved(DataSnapshot dataSnapshot) {
-                Log.d(TAG, "onChildRemoved:" + dataSnapshot.getKey());
-
-                // A comment has changed, use the key to determine if we are displaying this
-                // comment and if so remove it.
-                String commentKey = dataSnapshot.getKey();
-
-                // ...
-            }
-
-            @Override
-            public void onChildMoved(DataSnapshot dataSnapshot, String previousChildName) {
-                Log.d(TAG, "onChildMoved:" + dataSnapshot.getKey());
-
-                // A comment has changed position, use the key to determine if we are
-                // displaying this comment and if so move it.
-                Comment movedComment = dataSnapshot.getValue(Comment.class);
-                String commentKey = dataSnapshot.getKey();
-
-                // ...
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-                Log.w(TAG, "postComments:onCancelled", databaseError.toException());
-
-                Toast.makeText(mContext, "Failed to load comments.",
-                        Toast.LENGTH_SHORT).show();
-            }
-        };
-        ref.addChildEventListener(childEventListener);
-        final String userId = getUid();
-        mDatabase.child("users").child(userId).addListenerForSingleValueEvent(
-                new ValueEventListener() {
-                    @Override
-                    public void onDataChange(DataSnapshot dataSnapshot) {
-                        // Get user value
-                        User user = dataSnapshot.getValue(User.class);
-
-                        // ...
-                    }
-
-                    @Override
-                    public void onCancelled(DatabaseError databaseError) {
-                        Log.w(TAG, "getUser:onCancelled", databaseError.toException());
-                    }
-                });
     }
 
 

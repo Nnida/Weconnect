@@ -14,5 +14,8 @@ public class Main2Activity extends AppCompatActivity {
         Intent intent = new Intent(Main2Activity.this, MyService.class);
         startService(intent);
 
+        Intent intent1 = new Intent(Main2Activity.this, MapsActivity.class);
+        startActivity(intent1);
+
     }
 }

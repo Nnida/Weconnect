@@ -172,7 +172,6 @@ public class MyService extends Service implements GoogleApiClient.ConnectionCall
 
         databaseReference.updateChildren(hm);
 
-        databaseReference.child("test").setValue("testing val");
 
 
     }
